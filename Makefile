@@ -1,22 +1,16 @@
-main: tchat tchat_client
+main: tchat_server tchat_client
 
-tchat: tchat.o readn.o writen.o
-	gcc tchat.o readn.o writen.o -o tchat
+tchat_server: tchat_server.o
+	gcc tchat_server.o -o tchat_server
 
-tchat.o: tchat.c
-	gcc -c tchat.c -Wall -s
+tchat_server.o: tchat_server.c
+	gcc -c tchat_server.c -pthread
 
-tchat_client: tchat_client.o readn.o writen.o
-	gcc tchat_client.o readn.o writen.o -o tchat_client
+tchat_client: tchat_client.o
+	gcc tchat_client.o -o tchat_client
 
 tchat_client.o: tchat_client.c
-	gcc -c tchat_client.c -Wall -s
-
-readn.o: readn.c
-	gcc -c readn.c -s
-
-writen.o: writen.c
-	gcc -c writen.c -s
+	gcc -c tchat_client.c
 
 clean:
-	rm -f tchat tchat_client *.o
+	rm -f tchat_server tchat_client *.o
