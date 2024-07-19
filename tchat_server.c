@@ -16,38 +16,10 @@ pthread_mutex_t *mutex;
 
 int client_list[MAX_CLIENT];
 int next_client;
-int num_client;
 
-void send() // send buffer to all clients
-{
-    for (int i = 0; i < MAX_CLIENT; i++)
-    {
-        if (client_list[i] != -1)
-        {
-            write(client_list[i], write_buffer, BUFFER_SIZE);
-        }
-    }
-}
-
-void *thread(void *ptr)
-{
-    int clientfd = *(int *)ptr;
-
-    char *read_buffer = malloc(BUFFER_SIZE);
-    read(clientfd, read_buffer, BUFFER_SIZE);
-
-    pthread_mutex_lock(mutex);
-
-    memcpy(write_buffer, read_buffer, BUFFER_SIZE);
-
-    // send to all clients
-
-    pthread_mutex_unlock(mutex);
-
-    close(clientfd); // for now
-
-    return NULL;
-}
+void *thread(void *ptr);
+void send();
+void find_next_client();
 
 int main(int argc, char **argv)
 {
@@ -73,13 +45,12 @@ int main(int argc, char **argv)
         client_list[i] = -1;
     }
     next_client = 0;
-    num_client = 0;
 
     while (1)
     {
         clientfd = accept(serverfd, (struct sockaddr *)&address, &addrlen);
 
-        if (num_client == MAX_CLIENT - 1)
+        if (next_client == MAX_CLIENT)
         {
             printf("Max number of clients reached\n");
             close(clientfd);
@@ -88,8 +59,7 @@ int main(int argc, char **argv)
         {
             printf("New client: %d\n", clientfd);
             client_list[next_client] = clientfd;
-            next_client += 1; // for now sequential
-            num_client += 1;
+            find_next_client();
         }
 
         pthread_t *client_thread;
@@ -101,3 +71,52 @@ int main(int argc, char **argv)
 
     return 0;
 }
+
+void *thread(void *ptr)
+{
+    int clientfd = *(int *)ptr;
+
+    char *read_buffer = malloc(BUFFER_SIZE);
+    read(clientfd, read_buffer, BUFFER_SIZE);
+
+    pthread_mutex_lock(mutex);
+
+    memcpy(write_buffer, read_buffer, BUFFER_SIZE);
+
+    // send to all clients
+
+    pthread_mutex_unlock(mutex);
+
+    close(clientfd); // for now
+
+    return NULL;
+}
+
+void send() // send buffer to all clients
+{
+    for (int i = 0; i < MAX_CLIENT; i++)
+    {
+        if (client_list[i] != -1)
+        {
+            write(client_list[i], write_buffer, BUFFER_SIZE);
+        }
+    }
+}
+
+void find_next_client()
+{
+    for (int i = 0; i < MAX_CLIENT; i++)
+    {
+        if (client_list[i] == -1)
+        {
+            next_client == i;
+            return;
+        }
+    }
+}
+
+/*
+TODO:
+    remove client function
+    discover disconnected clients and manual disconnects (client commands?)
+*/
