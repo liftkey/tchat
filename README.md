@@ -1,1 +1,1 @@
-small chat server to help me pratice linux socket api, pthreads, and sqlite.
+small chat server to help me practice linux socket api, pthreads, and sqlite.
